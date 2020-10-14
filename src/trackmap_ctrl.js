@@ -7,7 +7,6 @@ import {MetricsPanelCtrl} from 'app/plugins/sdk';
 import './leaflet/leaflet.css!';
 import './partials/module.css!';
 
-
 function log(msg) {
   // uncomment for debugging
   //console.log(msg);
@@ -56,6 +55,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     this.leafMap = null;
     this.layerChanger = null;
     this.polylines = [];
+    this.superchargerMarks = [];
     this.hoverMarker = null;
     this.hoverTarget = null;
     this.setSizePromise = null;
@@ -226,6 +226,13 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
         this.polylines.forEach(polyline => polyline.removeFrom(this.leafMap));
         this.polylines = [];
       }
+
+      if (this.superchargerMarks.length > 0)
+      {
+        this.superchargerMarks.forEach(s => s.removeFrom(this.leafMap));
+        this.superchargerMarks = [];
+      }
+
       this.onPanelClear();
       return;
     }
@@ -308,7 +315,23 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     const coords = [[]];
 
     this.coords.forEach((coord, index) => {
-      if (index !== 0 && this.panel.maxDataPointDelta !== 0){
+      if (coord.type == 1)
+      {
+        var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/tesla_pin.png', iconAnchor:   [12, 32], popupAnchor:  [0, 0]});
+        var p = new L.latLng(coord.position);
+        var marker = new L.marker(p, {icon: superchargerIcon});
+        marker.addTo(this.leafMap);
+        this.superchargerMarks.push(marker);
+      }
+      else if (coord.type == 2)
+      {
+        var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/charger_pin.png', iconAnchor:   [12, 32], popupAnchor:  [0, 0]});
+        var p = new L.latLng(coord.position);
+        var marker = new L.marker(p, {icon: superchargerIcon});
+        marker.addTo(this.leafMap);
+        this.superchargerMarks.push(marker);
+      }
+      else if (index !== 0 && this.panel.maxDataPointDelta !== 0){
         const prevTimestamp = this.coords[index - 1].timestamp;
 
         if (coord.timestamp - prevTimestamp > this.panel.maxDataPointDelta * 1000){
@@ -372,7 +395,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     log("onDataReceived");
     this.setupMap();
 
-    if (data.length === 0 || data.length !== 2) {
+    if (data.length < 2) {
       // No data or incorrect data, show a world map and abort
       this.leafMap.setView([0, 0], 1);
       this.render();
@@ -384,6 +407,10 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     this.coords.length = 0;
     const lats = data[0].datapoints;
     const lons = data[1].datapoints;
+    var types = null;
+    if (data.length > 2)
+      types = data[2].datapoints;
+
     for (let i = 0; i < lats.length; i++) {
       if (lats[i][0] == null || lons[i][0] == null ||
           (lats[i][0] == 0 && lons[i][0] == 0) ||
@@ -391,9 +418,14 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
         continue;
       }
 
+      var t = null;
+      if (types != null)
+        t = types[i][0];
+
       this.coords.push({
         position: L.latLng(lats[i][0], lons[i][0]),
-        timestamp: lats[i][1]
+        timestamp: lats[i][1],
+        type: t
       });
     }
     this.addDataToMap();
