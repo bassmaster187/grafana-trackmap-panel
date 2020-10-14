@@ -7,14 +7,6 @@ import {MetricsPanelCtrl} from 'app/plugins/sdk';
 import './leaflet/leaflet.css!';
 import './partials/module.css!';
 
-const panelDefaults = {
-  maxDataPoints: 500,
-  autoZoom: true,
-  scrollWheelZoom: false,
-  defaultLayer: 'OpenStreetMap',
-  lineColor: 'red',
-  pointColor: 'royalblue',
-}
 
 function log(msg) {
   // uncomment for debugging
@@ -27,7 +19,15 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
 
     log("constructor");
 
-    _.defaults(this.panel, panelDefaults);
+    _.defaults(this.panel, {
+      maxDataPoints: 500,
+      autoZoom: true,
+      scrollWheelZoom: false,
+      defaultLayer: 'OpenStreetMap',
+      showLayerChanger: true,
+      lineColor: 'red',
+      pointColor: 'royalblue',
+    });
 
     // Save layers globally in order to use them in options
     this.layers = {
@@ -53,6 +53,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     this.timeSrv = $injector.get('timeSrv');
     this.coords = [];
     this.leafMap = null;
+    this.layerChanger = null;
     this.polyline = null;
     this.hoverMarker = null;
     this.hoverTarget = null;
@@ -66,10 +67,29 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     this.events.on('panel-size-changed', this.onPanelSizeChanged.bind(this));
     this.events.on('data-received', this.onDataReceived.bind(this));
     this.events.on('data-snapshot-load', this.onDataSnapshotLoad.bind(this));
+    this.events.on('render', this.onRender.bind(this));
 
     // Global events
     appEvents.on('graph-hover', this.onPanelHover.bind(this));
     appEvents.on('graph-hover-clear', this.onPanelClear.bind(this));
+  }
+
+  onRender(){
+    log("onRender")
+    // Wait until there is at least one GridLayer with fully loaded
+    // tiles before calling renderingCompleted
+    if (this.leafMap) {
+      this.leafMap.eachLayer((l) => {
+        if (l instanceof L.GridLayer){
+          if (l.isLoading()) {
+            l.once('load', this.renderingCompleted.bind(this));
+          }
+          else {
+            this.renderingCompleted();
+          }
+        }
+      });
+    }
   }
 
   onInitialized(){
@@ -132,6 +152,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
       idx--;
     }
     this.hoverMarker.setLatLng(this.coords[idx].position);
+    this.render();
   }
 
   onPanelClear(evt) {
@@ -180,12 +201,18 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
   applyDefaultLayer() {
     let hadMap = Boolean(this.leafMap);
     this.setupMap();
-    // Only need to re-add layers if the map previously existed
     if (hadMap){
+      // Re-add the default layer
       this.leafMap.eachLayer((layer) => {
         layer.removeFrom(this.leafMap);
       });
       this.layers[this.panel.defaultLayer].addTo(this.leafMap);
+
+      // Hide/show the layer switcher
+      this.leafMap.removeControl(this.layerChanger)
+      if (this.panel.showLayerChanger){
+        this.leafMap.addControl(this.layerChanger);
+      }
     }
     this.addDataToMap();
   }
@@ -208,8 +235,13 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
       zoomDelta: 1,
     });
 
+    // Create the layer changer
+    this.layerChanger = L.control.layers(this.layers)
+
     // Add layers to the control widget
-    L.control.layers(this.layers).addTo(this.leafMap);
+    if (this.panel.showLayerChanger){
+      this.leafMap.addControl(this.layerChanger);
+    }
 
     // Add default layer to map
     this.layers[this.panel.defaultLayer].addTo(this.leafMap);
@@ -266,6 +298,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
         to: moment.utc(bounds.to)
       });
     }
+    this.render();
   }
 
   // Add the circles and polyline to the map
@@ -284,7 +317,13 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
   zoomToFit(){
     log("zoomToFit");
     if (this.panel.autoZoom && this.polyline){
-      this.leafMap.fitBounds(this.polyline.getBounds());
+      var bounds = this.polyline.getBounds();
+      if (bounds.isValid()){
+        this.leafMap.fitBounds(bounds);
+      }
+      else {
+        this.leafMap.setView([0, 0], 1);
+      }
     }
     this.render();
   }
@@ -311,6 +350,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     if (data.length === 0 || data.length !== 2) {
       // No data or incorrect data, show a world map and abort
       this.leafMap.setView([0, 0], 1);
+      this.render();
       return;
     }
 
@@ -321,6 +361,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     const lons = data[1].datapoints;
     for (let i = 0; i < lats.length; i++) {
       if (lats[i][0] == null || lons[i][0] == null ||
+          (lats[i][0] == 0 && lons[i][0] == 0) ||
           lats[i][1] !== lons[i][1]) {
         continue;
       }
