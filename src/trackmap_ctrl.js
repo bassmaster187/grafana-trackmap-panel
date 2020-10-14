@@ -317,7 +317,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     this.coords.forEach((coord, index) => {
       if (coord.type == 1)
       {
-        var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/tesla_pin.png', iconAnchor:   [12, 32], popupAnchor:  [0, 0]});
+        var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/tesla_pin.png', iconAnchor:   [6, 16], popupAnchor:  [0, 0]});
         var p = new L.latLng(coord.position);
         var marker = new L.marker(p, {icon: superchargerIcon});
         marker.addTo(this.leafMap);
@@ -325,7 +325,15 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
       }
       else if (coord.type == 2)
       {
-        var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/charger_pin.png', iconAnchor:   [12, 32], popupAnchor:  [0, 0]});
+        var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/charger_pin.png', iconAnchor:   [6, 16], popupAnchor:  [0, 0]});
+        var p = new L.latLng(coord.position);
+        var marker = new L.marker(p, {icon: superchargerIcon});
+        marker.addTo(this.leafMap);
+        this.superchargerMarks.push(marker);
+      }
+      else if (coord.type == 3)
+      {
+        var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/ac_pin.png', iconAnchor:   [6, 16], popupAnchor:  [0, 0]});
         var p = new L.latLng(coord.position);
         var marker = new L.marker(p, {icon: superchargerIcon});
         marker.addTo(this.leafMap);
