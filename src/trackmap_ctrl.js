@@ -320,6 +320,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
         var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/tesla_pin.png', iconAnchor:   [6, 16], popupAnchor:  [0, 0]});
         var p = new L.latLng(coord.position);
         var marker = new L.marker(p, {icon: superchargerIcon});
+        marker.bindPopup(coord.text);
         marker.addTo(this.leafMap);
         this.superchargerMarks.push(marker);
       }
@@ -328,6 +329,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
         var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/charger_pin.png', iconAnchor:   [6, 16], popupAnchor:  [0, 0]});
         var p = new L.latLng(coord.position);
         var marker = new L.marker(p, {icon: superchargerIcon});
+        marker.bindPopup(coord.text);
         marker.addTo(this.leafMap);
         this.superchargerMarks.push(marker);
       }
@@ -336,6 +338,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
         var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/ac_pin.png', iconAnchor:   [6, 16], popupAnchor:  [0, 0]});
         var p = new L.latLng(coord.position);
         var marker = new L.marker(p, {icon: superchargerIcon});
+        marker.bindPopup(coord.text);
         marker.addTo(this.leafMap);
         this.superchargerMarks.push(marker);
       }
@@ -403,12 +406,47 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     log("onDataReceived");
     this.setupMap();
 
+    if (data[0].columns != null && data[0].rows != null)
+    {
+      for (let i = 0; i < data[0].rows.length; i++) {
+      
+        var row = data[0].rows[i];
+
+        if (row[0] == null || row[1] == null || row[0] == 0 || row[1] == 0)
+          continue;
+
+        var t = null;
+        var txt = null;
+        if (true)
+        {
+          t = row[3];
+          if (t > 0)
+            txt = row[4];
+        }
+
+        this.coords.push({
+          position: L.latLng(row[1], row[2]),
+          timestamp: row[0],
+          type: t,
+          text: txt
+        });
+      }
+
+      this.addDataToMap();
+      return;
+    }
+
+
+
     if (data.length < 2) {
       // No data or incorrect data, show a world map and abort
       this.leafMap.setView([0, 0], 1);
       this.render();
       return;
     }
+
+    
+    // begin time series
 
     // Asumption is that there are an equal number of properly matched timestamps
     // TODO: proper joining by timestamp?
@@ -427,16 +465,22 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
       }
 
       var t = null;
+      var txt = null;
       if (types != null)
+      {
         t = types[i][0];
+        txt = "";
+      }
 
       this.coords.push({
         position: L.latLng(lats[i][0], lons[i][0]),
         timestamp: lats[i][1],
-        type: t
+        type: t,
+        text: txt
       });
     }
     this.addDataToMap();
+    
   }
 
   onDataSnapshotLoad(snapshotData) {
