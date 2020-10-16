@@ -9,7 +9,7 @@ import './partials/module.css!';
 
 function log(msg) {
   // uncomment for debugging
-  //console.log(msg);
+  // console.log(msg);
 }
 
 export class TrackMapCtrl extends MetricsPanelCtrl {
@@ -76,7 +76,8 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
   }
 
   onRender(){
-    log("onRender")
+    //log("onRender")
+
     // Wait until there is at least one GridLayer with fully loaded
     // tiles before calling renderingCompleted
     if (this.leafMap) {
@@ -109,7 +110,8 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
   }
 
   onPanelHover(evt) {
-    log("onPanelHover");
+    // log("onPanelHover");
+
     if (this.coords.length === 0) {
       return;
     }
@@ -356,6 +358,7 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     log("addDataToMap");
 
     coords.forEach(polyline => {
+      log("polyline: " + polyline.length);
       this.polylines.push(L.polyline(polyline, {
         color: this.panel.lineColor,
         weight: 3,
@@ -406,8 +409,12 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     log("onDataReceived");
     this.setupMap();
 
+    this.coords.length = 0;
+
     if (data[0].columns != null && data[0].rows != null)
     {
+      log("Rows: " + data[0].rows.length);
+
       for (let i = 0; i < data[0].rows.length; i++) {
       
         var row = data[0].rows[i];
