@@ -344,6 +344,15 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
         marker.addTo(this.leafMap);
         this.superchargerMarks.push(marker);
       }
+      else if (coord.type == 4)
+      {
+        var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/p_pin.png', iconAnchor:   [6, 16], popupAnchor:  [0, 0]});
+        var p = new L.latLng(coord.position);
+        var marker = new L.marker(p, {icon: superchargerIcon});
+        marker.bindPopup(coord.text);
+        marker.addTo(this.leafMap);
+        this.superchargerMarks.push(marker);
+      }
       else if (index !== 0 && this.panel.maxDataPointDelta !== 0){
         const prevTimestamp = this.coords[index - 1].timestamp;
 
