@@ -1,7 +1,7 @@
 import L from './leaflet/leaflet.js';
 import moment from 'moment';
 
-import appEvents from 'app/core/app_events';
+import { LegacyGraphHoverClearEvent, LegacyGraphHoverEvent } from '@grafana/data';
 import {MetricsPanelCtrl} from 'app/plugins/sdk';
 
 import './leaflet/leaflet.css!';
@@ -69,10 +69,16 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     this.events.on('data-received', this.onDataReceived.bind(this));
     this.events.on('data-snapshot-load', this.onDataSnapshotLoad.bind(this));
     this.events.on('render', this.onRender.bind(this));
+    this.events.on('refresh', this.onRefresh.bind(this));
 
     // Global events
-    appEvents.on('graph-hover', this.onPanelHover.bind(this));
-    appEvents.on('graph-hover-clear', this.onPanelClear.bind(this));
+    this.dashboard.events.on(LegacyGraphHoverEvent.type, this.onPanelHover.bind(this), $scope);
+    this.dashboard.events.on(LegacyGraphHoverClearEvent.type, this.onPanelClear.bind(this), $scope);
+  }
+
+  onRefresh(){
+    log("onRefresh");
+    this.onPanelSizeChanged();
   }
 
   onRender(){
