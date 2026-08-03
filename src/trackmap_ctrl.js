@@ -275,6 +275,15 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
     // Events
     this.leafMap.on('baselayerchange', this.mapBaseLayerChange.bind(this));
     this.leafMap.on('boxzoomend', this.mapZoomToBox.bind(this));
+
+    var legend = L.control({position: 'bottomleft'});
+      legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'leaflet-control-layers leaflet-control-layers-expanded');
+        div.innerHTML += '<span style="background-color: #CF3828; height: 3px; width: 20px; border-radius: 10%; display: inline-block;"></span> Human driving<br>';
+        div.innerHTML += '<span style="background-color: #0070FF; height: 3px; width: 20px; border-radius: 10%; display: inline-block;"></span> Autopilot / TACC';
+        return div;
+      };
+      legend.addTo(this.leafMap);
   }
 
   mapBaseLayerChange(e) {
@@ -320,9 +329,27 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
 
   // Add the circles and polyline to the map
   addDataToMap() {
-    const coords = [[]];
+    const coords = [[{
+      position: [],
+      ap: 0
+    }]];
+    var ap = 0;
 
     this.coords.forEach((coord, index) => {
+      
+      if (ap != coord.ap)
+      {
+        coords[coords.length - 1][0].position.push(coord.position);
+
+        ap = coord.ap;
+        var t = {
+          position: [],
+          ap: ap
+        }
+
+        coords.push([t]); // Start a new polyline
+      }
+
       if (coord.type == 1)
       {
         var superchargerIcon = L.icon({iconUrl: 'public/plugins/pr0ps-trackmap-panel/img/tesla_pin.png', iconAnchor:   [6, 16], popupAnchor:  [0, 0]});
@@ -363,19 +390,29 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
         const prevTimestamp = this.coords[index - 1].timestamp;
 
         if (coord.timestamp - prevTimestamp > this.panel.maxDataPointDelta * 1000){
-          coords.push([]); // Start a new polyline
+          var t2 = {
+            position: [],
+            ap: ap
+          }
+          coords.push([t2]); // Start a new polyline
         }
       }
 
-      coords[coords.length - 1].push(coord.position);
+      coords[coords.length - 1][0].position.push(coord.position);
     });
 
     log("addDataToMap");
 
-    coords.forEach(polyline => {
-      log("polyline: " + polyline.length);
-      this.polylines.push(L.polyline(polyline, {
-        color: this.panel.lineColor,
+    coords.forEach((polyline, index) => {
+      log("polyline: " + polyline.length + " index" + index);
+      //var c = coordsColor[index];
+      var mycolor = "#0070FF";
+      
+      if (polyline[0].ap != 1)
+        mycolor = "#CF3828";
+
+      this.polylines.push(L.polyline(polyline[0].position, {
+        color: mycolor,
         weight: 3,
       }).addTo(this.leafMap));
     });
@@ -450,7 +487,8 @@ export class TrackMapCtrl extends MetricsPanelCtrl {
           position: L.latLng(row[1], row[2]),
           timestamp: row[0],
           type: t,
-          text: txt
+          text: txt,
+          ap: row[5]
         });
       }
 
