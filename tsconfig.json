@@ -1,0 +1,12 @@
+{
+  "extends": "@grafana/tsconfig",
+  "include": ["src", "types"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "allowJs": true
+  }
+}
