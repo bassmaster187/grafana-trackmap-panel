@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 144.8 184.7" enable-background="new 0 0 144.8 184.7" xml:space="preserve">
+<linearGradient id="ENBW_GRAD" gradientUnits="userSpaceOnUse" x1="72.4688" y1="5.5001" x2="72.4688" y2="140.0000">
+	<stop offset="0" style="stop-color:#16489E"/>
+	<stop offset="1" style="stop-color:#062B66"/>
+</linearGradient>
+<path fill="url(#ENBW_GRAD)" d="M140,72.3C140,35,109.8,4.7,72.5,4.7C35.2,4.7,4.9,35,4.9,72.3c0,18.4,7.4,35,19.3,47.2l48.4,60.2
+	l49.5-61.6l0,0C133.2,106,140,89.9,140,72.3z"/>
+<!-- EnBW-Orange "E" als Balken (kein Font noetig) -->
+<g fill="#FF9900">
+	<rect x="44" y="30" width="18" height="86"/>
+	<rect x="44" y="30" width="56" height="17"/>
+	<rect x="44" y="64" width="48" height="17"/>
+	<rect x="44" y="99" width="56" height="17"/>
+</g>
+</svg>

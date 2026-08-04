@@ -32,6 +32,8 @@ const PIN_URLS: Record<number, string> = {
   2: `public/plugins/${PLUGIN_ID}/img/charger_pin.png`,
   3: `public/plugins/${PLUGIN_ID}/img/ac_pin.png`,
   4: `public/plugins/${PLUGIN_ID}/img/p_pin.png`,
+  5: `public/plugins/${PLUGIN_ID}/img/ionity_pin.png`,
+  6: `public/plugins/${PLUGIN_ID}/img/enbw_pin.png`,
 };
 
 type HoverCoord = { timestamp: number; position: [number, number] };
@@ -332,7 +334,7 @@ function buildTracks(coords: TrackMapCoord[], options: TrackMapOptions): { polyl
       segments.push({ position: [], ap });
     }
 
-    if (coord.type && coord.type >= 1 && coord.type <= 4) {
+    if (coord.type && coord.type in PIN_URLS) {
       const icon = L.icon({ iconUrl: PIN_URLS[coord.type], iconAnchor: [6, 16], popupAnchor: [0, 0] });
       const marker = L.marker(coord.position, { icon });
       if (coord.text) {
